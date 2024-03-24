@@ -119,18 +119,43 @@ class CloudMusicMediaPlayer(MediaPlayerEntity):
                 # 判断音乐总时长
                 if self.before_state['media_duration'] > 0 and self.before_state['media_duration'] - self.before_state['media_duration'] <= 5:
                     # 判断源音乐播放器状态
-                    if self.before_state['state'] == STATE_PLAYING and self.current_state == STATE_IDLE:
+#                    if self.before_state['state'] == STATE_PLAYING and self.current_state == STATE_IDLE:
+#                    if self.before_state['media_duration'] - self.before_state['media_position'] <= 10 and self.before_state['media_duration'] > 1 and self.before_state['media_duration'] - self.before_state['media_position'] >= 0:
+
+                    if self._attr_media_duration - self._attr_media_position <= 19 and self._attr_media_duration > 1 and self._attr_media_duration - self._attr_media_position >= 0 :
+                        self._attr_state = STATE_PAUSED
+                        self.before_state = None
+                        timeleft = self._attr_media_duration - self._attr_media_position
+                        if timeleft > 13 :
+                            time.sleep(timeleft-13)
                         self.hass.async_create_task(self.async_media_next_track())
                         self.before_state = None
                         return
 
                 # 源播放器空闲 & 当前正在播放
-                if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_IDLE \
+#                if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_IDLE \
+#                    and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
+#                        self.hass.async_create_task(self.async_media_next_track())
+#                        self.before_state = None
+#                        return
+
+                if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_PLAYING \
                     and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
-                        self.hass.async_create_task(self.async_media_next_track())
+                        time.sleep(10)
+                        if self.before_state['media_duration'] == 0 and self.before_state['media_position'] == 0 and self.current_state == STATE_PLAYING \
+                            and self._attr_media_duration == 0 and self._attr_media_position == 0 and self._attr_state == STATE_PLAYING:
+                                self.hass.async_create_task(self.async_media_next_track())
+                                self.before_state = None
+                                return
+
+                # 判断是否已暂停
+                if media_player.state == STATE_IDLE and self._attr_state !=  STATE_ON:
+                    time.sleep(19)
+                    if media_player.state == STATE_IDLE and self._attr_state !=  STATE_ON :
+                        self.hass.async_create_task(self.async_media_pause())
                         self.before_state = None
                         return
-
+                        
             self.before_state = {
                 'media_position': self._attr_media_position,
                 'media_duration': self._attr_media_duration,
